@@ -1,0 +1,267 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>镜像坦白局</title>
+    <style>
+        :root {
+            --bg-color: #FFF9F2;
+            --card-bg: #FFFFFF;
+            --primary-color: #FFB7B2;
+            --primary-dark: #FF9E99;
+            --text-color: #5A5050;
+            --border-color: #EFE6DE;
+            --shadow: 0 4px 15px rgba(0, 0, 0, 0.05);
+            --diff-color: #A5CAD2;
+        }
+
+        body {
+            background-color: var(--bg-color);
+            font-family: "PingFang SC", "STHeiti", sans-serif;
+            color: var(--text-color);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            margin: 0;
+            padding: 20px;
+        }
+
+        .quiz-card {
+            background: var(--card-bg);
+            width: 100%;
+            max-width: 420px;
+            border-radius: 24px;
+            padding: 40px 30px;
+            box-shadow: var(--shadow);
+            text-align: center;
+            min-height: 500px;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            box-sizing: border-box;
+        }
+
+        /* 还原封面页样式 */
+        .cover-circle {
+            width: 120px;
+            height: 120px;
+            border: 2px solid var(--border-color);
+            border-radius: 50%;
+            margin: 40px auto;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            color: var(--primary-color);
+            font-size: 2.2rem;
+        }
+        .cover-title {
+            font-size: 1.5rem;
+            letter-spacing: 4px;
+            margin-bottom: 15px;
+            font-weight: 500;
+        }
+        .cover-subtitle {
+            font-size: 0.9rem;
+            color: #A09595;
+            line-height: 1.8;
+            margin-bottom: 40px;
+            padding: 0 10px;
+        }
+
+        /* 答题页通用样式 */
+        .progress-section { margin-bottom: 30px; }
+        .progress-text { font-size: 0.75rem; color: #A09595; margin-bottom: 8px; text-align: right; }
+        .progress-bar { width: 100%; height: 4px; background: #F0F0F0; border-radius: 10px; overflow: hidden; }
+        .progress-fill { height: 100%; background: var(--primary-color); transition: width 0.4s; }
+
+        .category-tag { font-size: 0.8rem; color: var(--primary-color); margin-bottom: 10px; letter-spacing: 2px; }
+        .question-title { font-size: 1.1rem; font-weight: 500; margin-bottom: 30px; line-height: 1.6; min-height: 3.5rem; }
+
+        .options-container { display: flex; flex-direction: column; gap: 12px; }
+        .option-btn {
+            background: #FFF; border: 1px solid var(--border-color); padding: 16px 20px; border-radius: 14px;
+            cursor: pointer; font-size: 0.9rem; color: var(--text-color); transition: 0.2s;
+        }
+        .option-btn:active { background-color: #FAF6F2; border-color: var(--primary-color); }
+
+        .note-input {
+            width: 100%; height: 150px; border: 1px solid var(--border-color); border-radius: 16px;
+            padding: 15px; font-family: inherit; font-size: 0.95rem; resize: none; outline: none;
+            box-sizing: border-box; background-color: #FCFBFA; margin-bottom: 20px;
+        }
+
+        /* 报告页特有样式 */
+        .scroll-area { max-height: 320px; overflow-y: auto; padding-right: 5px; margin: 15px 0; text-align: left; }
+        .match-score { font-size: 3.5rem; color: var(--primary-color); font-weight: bold; margin: 5px 0; }
+        .report-section-title { font-size: 0.9rem; font-weight: bold; margin: 20px 0 10px; color: var(--text-color); border-left: 4px solid var(--primary-color); padding-left: 8px; }
+        .diff-card { border: 1px dashed var(--diff-color); background: #F4F9FA; padding: 12px; border-radius: 12px; margin-bottom: 10px; font-size: 0.85rem; }
+        .tag-a { color: var(--primary-color); font-weight: bold; }
+        .tag-b { color: var(--diff-color); font-weight: bold; }
+
+        .btn-group { display: flex; gap: 10px; justify-content: center; }
+        .action-btn { flex: 1; border: none; padding: 18px; border-radius: 16px; cursor: pointer; font-size: 1rem; transition: 0.3s; }
+        .primary-btn { background: var(--primary-color); color: white; }
+        .skip-btn { background: #F5F5F5; color: #AAA; }
+
+        .footer-tips { margin-top: 30px; font-size: 0.8rem; color: #A09595; }
+    </style>
+</head>
+<body>
+
+<div class="quiz-card" id="mainCard"></div>
+
+<script>
+    const questions = [
+        // 社交界限 (10题)
+        { cat: "社交界限", q: "是否接受伴侣有“多年异性闺蜜”？", opts: ["能玩到一起", "保持距离", "必须带我认识", "无法接受"] },
+        { cat: "社交界限", q: "恋爱后可以单独和异性看电影吗？", opts: ["没问题", "看性质", "除非急事", "绝对不可以"] },
+        { cat: "社交界限", q: "伴侣朋友圈发异性单聊截图？", opts: ["社交能力强", "正常就行", "暗自琢磨", "直接质问"] },
+        { cat: "社交界限", q: "伴侣与异性连麦打游戏到深夜？", opts: ["各玩各的", "偶尔可以", "有点暧昧", "情感出轨"] },
+        { cat: "社交界限", q: "副驾驶的归属权？", opts: ["谁方便谁坐", "异性坐后排", "非急事不坐", "我的专属"] },
+        { cat: "社交界限", q: "接受伴侣去夜店/蹦迪吗？", opts: ["随便去", "严禁单独", "带我一起", "无法接受"] },
+        { cat: "社交界限", q: "伴侣帮异性朋友搬家修电脑？", opts: ["助人为乐", "报备即可", "找专业人士", "绝对不行"] },
+        { cat: "社交界限", q: "手机留着前任联系方式？", opts: ["不删不聊", "留着没事", "稳定后删", "必须拉黑"] },
+        { cat: "社交界限", q: "前任点赞了伴侣动态？", opts: ["只是礼貌", "有点不爽", "翻看对方", "要求屏蔽"] },
+        { cat: "社交界限", q: "伴侣和异性同事出差住隔壁？", opts: ["工作需要", "增加查岗", "非常介意", "必须换人"] },
+        // 消费观念 (10题)
+        { cat: "消费观念", q: "第一次约会买单方式？", opts: ["对方全包", "我来买单", "轮流请客", "坚决AA"] },
+        { cat: "消费观念", q: "遇到昂贵限量款心头好？", opts: ["刷卡快乐", "犹豫后买", "攒够再买", "绝对不买"] },
+        { cat: "消费观念", q: "情侣共同基金看法？", opts: ["没必要", "偶尔凑钱", "按比例存", "必须有"] },
+        { cat: "消费观念", q: "对方赚钱比你多很多？", opts: ["躺平带飞", "稍微压力", "追求对等", "感到自卑"] },
+        { cat: "消费观念", q: "理想的纪念日礼物？", opts: ["大牌名贵", "网红爆款", "实用所需", "走心手作"] },
+        { cat: "消费观念", q: "月薪一万花八千买包/表？", opts: ["人生苦短", "看多喜欢", "不会买", "无法理解"] },
+        { cat: "消费观念", q: "约会吃饭最认可价位(人均)？", opts: ["不设限", "300-500", "100-200", "50以内"] },
+        { cat: "消费观念", q: "是否接受婚前财产公证？", opts: ["伤感情", "随对方", "中立看情况", "必须公证"] },
+        { cat: "消费观念", q: "借钱给朋友的态度？", opts: ["有就借", "救急不救穷", "写借条", "概不外借"] },
+        { cat: "消费观念", q: "理想的旅游模式？", opts: ["全五星享受", "该省省该花花", "特种兵穷游", "没钱不去"] },
+        // 恋爱态度 (10题)
+        { cat: "恋爱态度", q: "对方半天没回消息心理？", opts: ["没发现", "有点疑惑", "演内心戏", "极度焦虑"] },
+        { cat: "恋爱态度", q: "恋爱后需要官宣吗？", opts: ["不需要", "稳定后发", "暗示内容", "必须换情头"] },
+        { cat: "恋爱态度", q: "发现对方暧昧期没断干净？", opts: ["正常选拔", "观察一阵", "要求表态", "直接拉黑"] },
+        { cat: "恋爱态度", q: "接受每天晚上视频吗？", opts: ["反感监视", "别成任务", "必修课", "不打就分手"] },
+        { cat: "恋爱态度", q: "为对方牺牲个人时间？", opts: ["不牺牲", "周末陪陪", "腻在一起", "随叫随到"] },
+        { cat: "恋爱态度", q: "如何看待翻看手机？", opts: ["随便看", "异常才看", "坚决不看", "信任崩塌"] },
+        { cat: "恋爱态度", q: "多久可以确定关系？", opts: ["一面之缘", "两周一月", "观察三月", "一年考核"] },
+        { cat: "恋爱态度", q: "冷战了处理方式？", opts: ["比对方冷", "主动沟通", "给台阶下", "不能过夜"] },
+        { cat: "恋爱态度", q: "最好的恋爱状态？", opts: ["顶峰相见", "共同成长", "平凡陪伴", "连体婴"] },
+        { cat: "恋爱态度", q: "离开城市希望对方？", opts: ["各自安好", "尝试异地", "跟我也走", "为TA留下"] }
+    ];
+
+    let state = { phase: 'COVER_A', currentUser: 'A', currentIdx: 0, isNoteMode: false, answersA: [], notesA: [], answersB: [], notesB: [] };
+
+    function render() {
+        const card = document.getElementById('mainCard');
+        
+        if (state.phase === 'COVER_A') {
+            card.innerHTML = `
+                <div>
+                    <div class="cover-circle">♥</div>
+                    <div class="cover-title">镜像坦白局</div>
+                    <div class="cover-subtitle">有些话不敢当面问？<br>在这里，用最温柔的方式<br>交换彼此的真心。</div>
+                    <button class="action-btn primary-btn" style="width:100%" onclick="startQuiz('A')">开启坦白局</button>
+                </div>
+                <div class="footer-tips">你的心里话都将被温柔传达</div>`;
+        } 
+        else if (state.phase === 'COVER_B') {
+            card.innerHTML = `
+                <div>
+                    <div class="cover-circle" style="border-color:#B2E2F2; color:#B2E2F2;">B</div>
+                    <div class="cover-title">轮到 TA 了</div>
+                    <div class="cover-subtitle">A 的答案已封存<br>现在请将手机递给 B<br>开启属于你的挑战</div>
+                    <button class="action-btn primary-btn" style="width:100%" onclick="startQuiz('B')">我是 B，开始挑战</button>
+                </div>
+                <div class="footer-tips">你的心里话都将被温柔传达</div>`;
+        }
+        else if (state.phase === 'QUIZ') {
+            const q = questions[state.currentIdx];
+            const p = Math.floor((state.currentIdx / questions.length) * 100);
+            card.innerHTML = `
+                <div>
+                    <div class="progress-section">
+                        <div class="progress-text">${state.currentUser} 正在填写 · ${p}%</div>
+                        <div class="progress-bar"><div class="progress-fill" style="width: ${p}%"></div></div>
+                    </div>
+                    <div class="category-tag">— ${q.cat} —</div>
+                    ${!state.isNoteMode ? `
+                        <div class="question-title">${q.q}</div>
+                        <div class="options-container">
+                            ${q.opts.map((o, i) => `<button class="option-btn" onclick="handleChoice(${i})">${o}</button>`).join('')}
+                        </div>
+                    ` : `
+                        <div class="question-title">关于这部分，你有什么悄悄话想对 TA 说？</div>
+                        <textarea id="noteInput" class="note-input" placeholder="（选填）在这里写下你想说的话..."></textarea>
+                        <div class="btn-group">
+                            <button class="action-btn skip-btn" onclick="handleNote()">直接继续</button>
+                            <button class="action-btn primary-btn" onclick="handleNote()">保存并继续</button>
+                        </div>
+                    `}
+                </div>
+                <div class="footer-tips">你的心里话都将被温柔传达</div>`;
+        }
+        else if (state.phase === 'REPORT') {
+            renderReport(card);
+        }
+    }
+
+    function startQuiz(user) { state.currentUser = user; state.phase = 'QUIZ'; state.currentIdx = 0; render(); }
+    
+    function handleChoice(idx) {
+        if (state.currentUser === 'A') state.answersA[state.currentIdx] = idx;
+        else state.answersB[state.currentIdx] = idx;
+        if ((state.currentIdx + 1) % 10 === 0) state.isNoteMode = true;
+        else moveNext();
+        render();
+    }
+
+    function handleNote() {
+        const val = document.getElementById('noteInput')?.value || "";
+        if (state.currentUser === 'A') state.notesA.push(val); else state.notesB.push(val);
+        state.isNoteMode = false; moveNext(); render();
+    }
+
+    function moveNext() {
+        if (state.currentIdx === questions.length - 1) {
+            if (state.currentUser === 'A') state.phase = 'COVER_B';
+            else state.phase = 'REPORT';
+        } else state.currentIdx++;
+    }
+
+    function renderReport(card) {
+        let match = 0, diffs = [];
+        state.answersA.forEach((ans, i) => {
+            if(ans === state.answersB[i]) match++;
+            if(Math.abs(ans - state.answersB[i]) >= 2) diffs.push(i);
+        });
+        const score = Math.floor((match / questions.length) * 100);
+
+        card.innerHTML = `
+            <div>
+                <div class="match-score">${score}%</div>
+                <div class="cover-subtitle" style="margin-bottom:10px;">三观默契度</div>
+                <div class="scroll-area">
+                    <div class="report-section-title">🚨 极端值观测站</div>
+                    ${diffs.length ? diffs.map(i => `
+                        <div class="diff-card">
+                            <strong>${questions[i].q}</strong><br>
+                            <span class="tag-a">A选：</span>${questions[i].opts[state.answersA[i]]}<br>
+                            <span class="tag-b">B选：</span>${questions[i].opts[state.answersB[i]]}
+                        </div>`).join('') : '<p style="font-size:0.8rem; color:#999; text-align:center;">暂无极端分歧，真有默契！</p>'}
+                    
+                    <div class="report-section-title">💌 互换的心里话</div>
+                    ${state.notesA.map((note, i) => `
+                        <div class="diff-card" style="border-style:solid; border-color:var(--border-color); background:#FFF;">
+                            <span class="tag-a">A：</span>${note || "（未填写）"}<br>
+                            <span class="tag-b">B：</span>${state.notesB[i] || "（未填写）"}
+                        </div>`).join('')}
+                </div>
+                <button class="action-btn primary-btn" style="width:100%" onclick="location.reload()">再玩一次</button>
+            </div>
+            <div class="footer-tips">你的心里话都将被温柔传达</div>`;
+    }
+
+    render();
+</script>
+</body>
+</html>
