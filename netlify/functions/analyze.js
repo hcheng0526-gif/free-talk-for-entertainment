@@ -20,7 +20,7 @@ B 的观点是：“${choiceB}”
     const response = await fetch("https://api.siliconflow.cn/v1/chat/completions", {
       method: "POST",
       headers: {
-        "Authorization": `Bearer ${process.env.AI_API_KEY}`,
+        "Authorization": `Bearer ${process.env.DEEPSEEK_API_KEY}`,
         "Content-Type": "application/json"
       },
       body: JSON.stringify({
