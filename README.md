@@ -17,9 +17,9 @@ JUST FOR FUN
 ### 📸 项目视觉与氛围
 为了让沟通更具仪式感，我们为用户设计了极具氛围感的引导视觉：
 
-![2027年情书](docs/assets/poster2.jpg)
+![2027年情书](docs/assets/poster2.png)
 
-![目前的题目](docs/assets/poster1.jpg)
+![目前的题目](docs/assets/poster1.png)
 
 *注：此海报在小红书发布后，获得了垂直用户的深度共鸣。*
 *注：此海报在小红书发布后，获得了垂直用户的深度共鸣。*
