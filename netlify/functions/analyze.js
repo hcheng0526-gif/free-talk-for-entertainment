@@ -1,5 +1,4 @@
-const btoa = require('btoa');
-
+// 删掉最上面的 require('btoa')，我们不需要它了
 exports.handler = async (event) => {
   // 仅允许 POST 请求
   if (event.httpMethod !== "POST") {
@@ -17,7 +16,7 @@ A 的观点是：“${choiceA}”
 B 的观点是：“${choiceB}”
 请针对这两人的分歧点，写一段 60 字以内的锐评，要犀利、幽默，能一针见血地指出他们相处的隐患或萌点。`;
 
-    // 使用原生的 fetch 发送请求 (Node.js 18+ 在 Netlify 环境默认支持)
+    // 使用原生的 fetch 发送请求
     const response = await fetch("https://api.siliconflow.cn/v1/chat/completions", {
       method: "POST",
       headers: {
@@ -25,7 +24,7 @@ B 的观点是：“${choiceB}”
         "Content-Type": "application/json"
       },
       body: JSON.stringify({
-        model: "deepseek-ai/DeepSeek-V3", // 或者你选择的其他模型
+        model: "deepseek-ai/DeepSeek-V3", 
         messages: [{ role: "user", content: prompt }],
         temperature: 0.7
       })
@@ -33,8 +32,13 @@ B 的观点是：“${choiceB}”
 
     const data = await response.json();
 
+    if (!data.choices || !data.choices[0]) {
+        throw new Error("AI 接口返回数据异常");
+    }
+
     return {
       statusCode: 200,
+      headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ result: data.choices[0].message.content })
     };
 
@@ -42,6 +46,7 @@ B 的观点是：“${choiceB}”
     console.error("Error:", error);
     return {
       statusCode: 500,
+      headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ error: "AI 思考过度，请稍后再试" })
     };
   }
