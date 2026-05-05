@@ -228,12 +228,24 @@
         } else state.currentIdx++;
     }
 
-    function renderReport(card) {
+function renderReport(card) {
         let match = 0, diffs = [];
         state.answersA.forEach((ans, i) => {
             if(ans === state.answersB[i]) match++;
-            if(Math.abs(ans - state.answersB[i]) >= 2) diffs.push(i);
+            // 记录所有分歧项
+            if(ans !== state.answersB[i]) {
+                diffs.push({
+                    q: questions[i].q,
+                    cat: questions[i].cat,
+                    a: questions[i].opts[state.answersA[i]],
+                    b: questions[i].opts[state.answersB[i]],
+                    level: Math.abs(ans - state.answersB[i]) // 分歧等级
+                });
+            }
         });
+        
+        // 按分歧等级排序，把矛盾最深的排前面给AI看
+        diffs.sort((a, b) => b.level - a.level);
         const score = Math.floor((match / questions.length) * 100);
 
         card.innerHTML = `
@@ -242,13 +254,25 @@
                 <div class="cover-subtitle" style="margin-bottom:10px;">三观默契度</div>
                 <div class="scroll-area">
                     <div class="report-section-title">🚨 极端值观测站</div>
-                    ${diffs.length ? diffs.map(i => `
+                    ${diffs.filter(d => d.level >= 2).length ? diffs.filter(d => d.level >= 2).map(d => `
                         <div class="diff-card">
-                            <strong>${questions[i].q}</strong><br>
-                            <span class="tag-a">A选：</span>${questions[i].opts[state.answersA[i]]}<br>
-                            <span class="tag-b">B选：</span>${questions[i].opts[state.answersB[i]]}
+                            <strong>${d.q}</strong><br>
+                            <span class="tag-a">A选：</span>${d.a}<br>
+                            <span class="tag-b">B选：</span>${d.b}
                         </div>`).join('') : '<p style="font-size:0.8rem; color:#999; text-align:center;">暂无极端分歧，真有默契！</p>'}
                     
+                    <div id="ai-section" style="margin: 20px 0; padding: 15px; background: #FFF5F5; border: 1px solid #FFB7B2; border-radius: 16px;">
+                        <div style="font-size: 0.85rem; font-weight: bold; color: #FF9E99; margin-bottom: 8px; display: flex; align-items: center;">
+                            <span style="margin-right:5px;">🤖</span> AI 情感专家锐评
+                        </div>
+                        <div id="ai-result-text" style="font-size: 0.85rem; color: #5A5050; line-height: 1.5; margin-bottom: 12px;">
+                            点击下方按钮，让 AI 分析你们最深的分歧点...
+                        </div>
+                        <button id="ai-btn" class="action-btn primary-btn" style="padding: 10px; font-size: 0.8rem;" 
+                                onclick="startAIAnalysis(${JSON.stringify(diffs[0]).replace(/"/g, '&quot;')})">
+                            召唤 AI 锐评
+                        </button>
+                    </div>
                     <div class="report-section-title">💌 互换的心里话</div>
                     ${state.notesA.map((note, i) => `
                         <div class="diff-card" style="border-style:solid; border-color:var(--border-color); background:#FFF;">
@@ -260,7 +284,45 @@
             </div>
             <div class="footer-tips">你的心里话都将被温柔传达</div>`;
     }
+async function startAIAnalysis(topDiff) {
+        const resultText = document.getElementById('ai-result-text');
+        const aiBtn = document.getElementById('ai-btn');
 
+        if (!topDiff) {
+            resultText.innerText = "你们太默契了，AI 找不到吐槽点，建议直接领证。";
+            return;
+        }
+
+        aiBtn.disabled = true;
+        aiBtn.innerText = "正在组织语言...";
+        resultText.innerText = "AI 正在深度思考你们的关系...";
+
+        try {
+            const response = await fetch('/.netlify/functions/analyze', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    category: topDiff.cat,
+                    question: topDiff.q,
+                    choiceA: topDiff.a,
+                    choiceB: topDiff.b
+                })
+            });
+
+            const data = await response.json();
+            if (data.result) {
+                resultText.innerText = data.result;
+            } else {
+                resultText.innerText = "AI 觉得你们的分歧太深，它拒绝回答（接口异常）。";
+            }
+        } catch (error) {
+            resultText.innerText = "呼叫 AI 失败，它可能在相亲途中断网了。";
+            console.error(error);
+        } finally {
+            aiBtn.innerText = "重新点评";
+            aiBtn.disabled = false;
+        }
+    }
     render();
 </script>
 </body>
