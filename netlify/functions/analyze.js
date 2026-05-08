@@ -1,55 +1,68 @@
 exports.handler = async (event) => {
-  if (event.httpMethod !== "POST") {
-    return { statusCode: 405, body: "Method Not Allowed" };
-  }
+    if (event.httpMethod !== "POST") {
+        return { statusCode: 405, body: "Method Not Allowed" };
+    }
 
-  try {
-    const { category, question, choiceA, choiceB } = JSON.parse(event.body);
+    try {
+        const { category, question, choiceA, choiceB } = JSON.parse(event.body);
 
-  const prompt = `你是一位精通博弈论与心理学的社交分析专家。
-现有两人在【${category}】维度的测试中出现分歧：
+        // 获取当前日期（符合小米要求的系统提示词格式）
+        const now = new Date();
+        const dateStr = now.toLocaleDateString('zh-CN', { year: 'numeric', month: 'long', day: 'numeric' });
+        const weekStr = now.toLocaleDateString('zh-CN', { weekday: 'long' });
+
+        // 小米官方建议的系统提示词
+        const systemContent = `你是MiMo（中文名称也是MiMo），是小米公司研发的AI智能助手。今天的日期：${dateStr} ${weekStr}，你的知识截止日期是2024年12月。你现在是一位精通心理学的情感分析专家，负责犀利地点评情侣分歧。`;
+
+        const userPrompt = `两人在【${category}】维度的测试出现分歧：
 题目：${question}
-A的选择：${choiceA}
-B的选择：${choiceB}
+A选择：${choiceA}
+B选择：${choiceB}
+请用一段60字以内、幽默犀利的脱口秀风格话语，指出两人的本质矛盾并给出一个反差感建议。`;
 
-请通过这两人的选项，深度挖掘他们对“${category}”底层认知的本质差异。
-要求：
-1. 语气：犀利、毒舌但不失优雅，像顶级脱口秀演员。
-2. 逻辑：一针见血，指出这种三观分歧在未来生活（如婚后或长期相处）中可能演变成的具体矛盾场景。
-3. 结尾：给出一个极具反差感的调解建议。
-4. 字数：控制在80字以内。`;
+        // 根据文档修正域名：优先尝试 api.xiaomimimo.com
+        // 如果依然不行，再换回 token-plan-cn.xiaomimimo.com
+        const MI_ENDPOINT = "https://api.xiaomimimo.com/v1/chat/completions";
 
-  // 关键点：在 Base URL 后面必须补上 /chat/completions
-    const MI_API_ENDPOINT = "https://token-plan-cn.xiaomimimo.com/v1/chat/completions";
+        const response = await fetch(MI_ENDPOINT, {
+            method: "POST",
+            headers: {
+                "Authorization": `Bearer ${process.env.XIAOMI_API_KEY}`,
+                "Content-Type": "application/json"
+            },
+            body: JSON.stringify({
+                model: "mimo-v2.5-pro", // 严格遵守文档的小写格式
+                messages: [
+                    { "role": "system", "content": systemContent },
+                    { "role": "user", "content": userPrompt }
+                ],
+                temperature: 1.0, // 遵照文档建议的默认值
+                top_p: 0.95
+            })
+        });
 
-    const response = await fetch(MI_API_ENDPOINT, {
-      method: "POST",
-      headers: {
-        "Authorization": `Bearer ${process.env.XIAOMI_API_KEY}`,
-        "Content-Type": "application/json"
-      },
-      body: JSON.stringify({
-        // 使用你权益中的旗舰模型
-        model: "mimo-V2.5-Pro", 
-        messages: [{ role: "user", content: prompt }],
-        temperature: 0.8
-      })
-    });
+        const data = await response.json();
 
-    const data = await response.json();
+        // 增加容错检查
+        if (data.choices && data.choices[0]) {
+            return {
+                statusCode: 200,
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ result: data.choices[0].message.content })
+            };
+        } else {
+            console.error("小米返回原始数据:", JSON.stringify(data));
+            return {
+                statusCode: 500,
+                body: JSON.stringify({ error: "模型返回异常", detail: data })
+            };
+        }
 
-    return {
-      statusCode: 200,
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ result: data.choices[0].message.content })
-    };
-
-  } catch (error) {
-    console.error("Error:", error);
-    return {
-      statusCode: 500,
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ error: "AI 思考过度，请稍后再试" })
-    };
-  }
+    } catch (error) {
+        console.error("捕获异常:", error.message);
+        return {
+            statusCode: 500,
+            body: JSON.stringify({ error: "网络请求失败", message: error.message })
+        };
+    }
 };
