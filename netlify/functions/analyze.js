@@ -22,7 +22,7 @@ B选择：${choiceB}
 
         // 根据文档修正域名：优先尝试 api.xiaomimimo.com
         // 如果依然不行，再换回 token-plan-cn.xiaomimimo.com
-        const MI_ENDPOINT = "https://api.xiaomimimo.com/v1/chat/completions";
+        const MI_ENDPOINT = "https://token-plan-cn.xiaomimimo.com/v1/chat/completions";
 
         const response = await fetch(MI_ENDPOINT, {
             method: "POST",
