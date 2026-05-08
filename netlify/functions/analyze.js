@@ -30,7 +30,7 @@ B的选择：${choiceB}
       },
       body: JSON.stringify({
         // 使用你权益中的旗舰模型
-        model: "MiMo-V2.5-Pro", 
+        model: "mimo-V2.5-Pro", 
         messages: [{ role: "user", content: prompt }],
         temperature: 0.8
       })
